@@ -4,16 +4,19 @@ const pauseBtn = document.getElementById('pause-btn');
 const resetBtn = document.getElementById('reset-btn');
 const focusTimeInput = document.getElementById('focus-time');
 const breakTimeInput = document.getElementById('break-time');
+const loopCountInput = document.getElementById('loop-count');
 
 let countdown;
 let timer;
 let isPaused = false;
 let isBreak = false;
+let currentLoop = 0;
 
 function startTimer() {
     if (countdown) {
         return;
     }
+
     const focusTime = focusTimeInput.value * 60;
     const breakTime = breakTimeInput.value * 60;
 
@@ -25,7 +28,6 @@ function startTimer() {
 
     document.body.style.backgroundColor = isBreak ? '#4CAF50' : '#333';
 
-
     countdown = setInterval(() => {
         timer--;
         updateDisplay(timer);
@@ -33,6 +35,18 @@ function startTimer() {
         if (timer <= 0) {
             clearInterval(countdown);
             countdown = null;
+
+            if (isBreak) {
+                // A full cycle (focus + break) has completed.
+                currentLoop++;
+                const totalLoops = loopCountInput.value;
+                if (currentLoop >= totalLoops) {
+                    alert("Pomodoro session(s) complete!");
+                    resetTimer();
+                    return;
+                }
+            }
+
             isBreak = !isBreak;
             new Audio('https://www.soundjay.com/buttons/beep-07.wav').play();
             startTimer();
@@ -53,13 +67,16 @@ function resetTimer() {
     countdown = null;
     isPaused = false;
     isBreak = false;
+    currentLoop = 0;
     timer = focusTimeInput.value * 60;
     updateDisplay(timer);
+    document.body.style.backgroundColor = '#333';
 }
 
 function updateDisplay(time) {
+    if (time < 0) time = 0;
     const minutes = Math.floor(time / 60);
-    const seconds = time % 60;
+    const seconds = Math.floor(time % 60);
     timerDisplay.textContent = `${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
 }
 
